@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python If Statement Evaluator</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://openai.azure.com;">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        textarea {
+            width: calc(100% - 140px); /* Adjusted width to accommodate select box */
+            height: 200px;
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: none;
+        }
+
+        select {
+            width: 120px;
+            height: 40px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+            button:hover {
+                background-color: #0056b3;
+            }
+
+        .result, .error {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .result {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Python If 語句評估器</h1>
+    <form id="evaluation-form" action="/Home/Evaluate" method="post">
+        <label for="statement_type">Select Statement Type:</label><br>
+        <select name="statement_type" id="statement_type" onchange="updateCode()">
+            <option value="if">If</option>
+            <option value="if_else">If Else</option>
+            <option value="if_elseif_else">If Else If</option>
+        </select><br><br>
+        <label for="code">Enter Python Code:</label><br>
+        <textarea id="code" name="input" placeholder="Enter Python code here..." required></textarea><br>
+        <button type="button" onclick="evaluateCode()">評估</button>
+    </form>
+
+    <div class="result" id="result-div">
+        <h2>Result:</h2>
+        <p id="result-content">@Html.Raw(ViewBag.output)</p>
+    </div>
+
+    <div class="error" id="error-div">
+        <h2>Error:</h2>
+        <p id="error-content"></p>
+    </div>
+
+    <script>
+        // 更新 Python 代碼函數
+        function updateCode() {
+            const statementType = document.getElementById('statement_type').value;
+            let pythonCode = '';
+
+            if (statementType === 'if') {
+                pythonCode = `A=15\nB=5\nif A>=10\n    print(A)\nprint(B)`;
+            } else if (statementType === 'if_else') {
+                pythonCode = `A = 15\nif A > 10:\n    print("A")\nif A != 10:\n    print("B")\nelse:\n    print("C")`;
+            } else if (statementType === 'if_elseif_else') {
+                pythonCode = `A = 15\nif A > 10:\n    print("A")\nelif A != 10:\n    print("B")\nelse:\n    print("C")`;
+            }
+
+            document.getElementById('code').value = pythonCode;
+        }
+
+        // 評估代碼函數
+        // 評估代碼函數
+        function evaluateCode() {
+            const statementType = document.getElementById('statement_type').value;
+            const pythonCode = document.getElementById('code').value;
+            const apiKey = '8c8f0e3bf34b48ceb3e3de2fc001a1ff'; // 替換成你的 OpenAI API 密鑰
+
+            // 發送 AJAX POST 請求
+            $.ajax({
+                type: "POST",
+                url: '/Home/EL',
+                contentType: "application/json",
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                data: JSON.stringify({
+                    model: 'text-davinci-002', // GPT-3 模型
+                    prompt: `Evaluate the following Python code:\nStatement type: ${statementType}\nCode:\n${pythonCode}`,
+                    max_tokens: 100
+                }),
+                success: function (responseData) {
+                    // 更新頁面上的結果
+                    document.getElementById('result-content').textContent = responseData.response;
+                    document.getElementById('result-div').style.display = 'block';
+                    document.getElementById('error-div').style.display = 'none';
+                },
+                error: function (xhr, status, error) {
+                    // 顯示錯誤訊息
+                    document.getElementById('error-content').textContent = xhr.responseText;
+                    document.getElementById('error-div').style.display = 'block'; // 顯示錯誤區塊
+                    document.getElementById('result-div').style.display = 'none'; // 隱藏結果區塊
+                }
+
+            });
+        }
+
+    </script>
+</body>
+</html>
